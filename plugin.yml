@@ -1,0 +1,7 @@
+name: PTLogger
+author: Genhis
+website: http://genhis.6f.sk/
+depend: [GLib]
+softdepend: [Essentials]
+main: sk.genhis.ptlogger.PTLogger
+version: 0.3.1

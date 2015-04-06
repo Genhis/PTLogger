@@ -1,0 +1,7 @@
+mysql: #tieto nastavenia prepíšu nastavenia z GLib, ak je enable nastavené na true
+  enable: false
+  host: localhost
+  user: 
+  pass: 
+  db: minecraft
+file_version: 0.3.1
