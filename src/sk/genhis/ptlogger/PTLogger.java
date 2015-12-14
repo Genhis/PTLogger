@@ -25,7 +25,7 @@ public final class PTLogger extends GPlugin {
 	private static PTLogger plugin = null;
 	private static Logger logger = null;
 	private static Configuration config = null;
-	private static MySQL mysql = GLib.getMysql();
+	private static MySQL mysql;
 	
 	private static Calendar cal = Calendar.getInstance();
 	private static final Map<String, Long> stats = new HashMap<String, Long>();
@@ -37,6 +37,7 @@ public final class PTLogger extends GPlugin {
 	
 	private boolean essentials = false;
 	
+	@Override
 	protected boolean enable() {
 		PTLogger.plugin = this;
 		PTLogger.logger = new Logger(this);
@@ -62,6 +63,8 @@ public final class PTLogger extends GPlugin {
 					ex.printStackTrace();
 			}
 		}
+		else
+			PTLogger.mysql = GLib.getMysql();
 
 		this.getOwnLogger().log("Instalujem MySQL tabulky");
 		try {
@@ -89,6 +92,7 @@ public final class PTLogger extends GPlugin {
 		return true;
 	}
 	
+	@Override
 	protected void disable() {
 		this.getOwnLogger().log("Odhlasujem pritomnych hracov a ukladam data");
 		PTLogger.allLeave();

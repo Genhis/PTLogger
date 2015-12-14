@@ -8,6 +8,6 @@ public final class UpdateDateTask implements GTask {
 	}
 
 	public String getName() {
-		return getClass().getName();
+		return this.getClass().getName();
 	}
 }
