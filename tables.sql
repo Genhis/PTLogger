@@ -6,5 +6,5 @@ CREATE TABLE IF NOT EXISTS ptl_log(
 	year		int(11)		NOT NULL,
 	time		int(11)		NOT NULL,
 	PRIMARY KEY(id),
-	INDEX(username)
+	UNIQUE(username, day, month, year)
 );

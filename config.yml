@@ -4,4 +4,6 @@ mysql: #tieto nastavenia prepíšu nastavenia z GLib, ak je enable nastavené na tr
   user: 
   pass: 
   db: minecraft
+
+#Don't change this!
 file_version: 0.3.1

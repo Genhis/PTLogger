@@ -105,7 +105,7 @@ public final class PTLogger extends GPlugin {
 		MySQL m = PTLogger.getPlugin().getOwnMysql();
 		try {
 			m.connect();
-			ResultSet r = m.query("SELECT time FROM ptl_log WHERE username='" + player + "' AND day=" + PTLogger.cal.get(Calendar.DAY_OF_MONTH) + " AND month=" + PTLogger.cal.get(Calendar.MONTH) + " AND year=" + PTLogger.cal.get(Calendar.YEAR) + " LIMIT 1");
+			ResultSet r = m.query("SELECT time FROM ptl_log WHERE username='" + player + "' AND day=" + PTLogger.cal.get(Calendar.DAY_OF_MONTH) + " AND month=" + (PTLogger.cal.get(Calendar.MONTH) + 1) + " AND year=" + PTLogger.cal.get(Calendar.YEAR) + " LIMIT 1");
 			if(r.next())
 				PTLogger.stats.put(player, r.getLong("time"));
 			else {
@@ -125,11 +125,11 @@ public final class PTLogger extends GPlugin {
 			m.connect();
 			
 			if(PTLogger.newp.contains(player)) {
-				m.uquery("INSERT INTO ptl_log(username, day, month, year, time) VALUES('" + player + "'," + PTLogger.cal.get(Calendar.DAY_OF_MONTH) + "," + PTLogger.cal.get(Calendar.MONTH) + "," + PTLogger.cal.get(Calendar.YEAR) + "," + PTLogger.getPlayerTime(player) + ")");
+				m.uquery("INSERT INTO ptl_log(username, day, month, year, time) VALUES('" + player + "'," + PTLogger.cal.get(Calendar.DAY_OF_MONTH) + "," + (PTLogger.cal.get(Calendar.MONTH) + 1) + "," + PTLogger.cal.get(Calendar.YEAR) + "," + PTLogger.getPlayerTime(player) + ")");
 				PTLogger.newp.remove(player);
 			}
 			else
-				m.uquery("UPDATE ptl_log SET time = " + PTLogger.getPlayerTime(player) + " WHERE username='" + player + "'");
+				m.uquery("UPDATE ptl_log SET time = " + PTLogger.getPlayerTime(player) + " WHERE username='" + player + "' AND day=" + PTLogger.cal.get(Calendar.DAY_OF_MONTH) + " AND month=" + (PTLogger.cal.get(Calendar.MONTH) + 1) + " AND year=" + PTLogger.cal.get(Calendar.YEAR));
 			PTLogger.stats.remove(player);
 			
 			m.disconnect();
