@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS ptl_log(
 	month		int(2)		NOT NULL,
 	year		int(11)		NOT NULL,
 	time		int(11)		NOT NULL,
+	vanish		int(11)		NOT NULL,
 	PRIMARY KEY(id),
 	UNIQUE(username, day, month, year)
 );

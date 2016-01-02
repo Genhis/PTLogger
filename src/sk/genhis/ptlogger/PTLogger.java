@@ -29,6 +29,7 @@ public final class PTLogger extends GPlugin {
 	
 	private static Calendar cal = Calendar.getInstance();
 	private static final Map<String, Long> stats = new HashMap<String, Long>();
+	private static final Map<String, Long> vanish = new HashMap<String, Long>();
 	private static final List<String> newp = new ArrayList<String>();
 	
 	private static boolean paused = false;
@@ -36,6 +37,7 @@ public final class PTLogger extends GPlugin {
 	private static UpdateDateTask udt = new UpdateDateTask();
 	
 	private boolean essentials = false;
+	private boolean vanishNoPacket = false;
 	
 	@Override
 	protected boolean enable() {
@@ -79,6 +81,8 @@ public final class PTLogger extends GPlugin {
 		this.getOwnLogger().log("Hladam pluginy pre integraciu");
 		if(this.essentials = Bukkit.getPluginManager().getPlugin("Essentials") != null)
 			this.getOwnLogger().log("Zapinam integraciu s pluginom Essentials");
+		if(this.vanishNoPacket = Bukkit.getPluginManager().getPlugin("VanishNoPacket") != null)
+			this.getOwnLogger().log("Zapinam integraciu s pluginom VanishNoPacket");
 		
 		this.getOwnLogger().log("Prihlasujem pritomnych hracov");
 		PTLogger.allJoin();
@@ -87,6 +91,10 @@ public final class PTLogger extends GPlugin {
 		Bukkit.getPluginManager().registerEvents(new BukkitListener(), this);
 		if(this.essentials)
 			Bukkit.getPluginManager().registerEvents(new EssentialsListener(), this);
+		if(this.vanishNoPacket)
+			Bukkit.getPluginManager().registerEvents(new VanishNoPacketListener(), this);
+		if(this.essentials && this.vanishNoPacket)
+			Bukkit.getPluginManager().registerEvents(new VanishNoPacketEssentialsListener(), this);
 		
 		PTLogger.startUpdateTask();
 		return true;
@@ -105,11 +113,14 @@ public final class PTLogger extends GPlugin {
 		MySQL m = PTLogger.getPlugin().getOwnMysql();
 		try {
 			m.connect();
-			ResultSet r = m.query("SELECT time FROM ptl_log WHERE username='" + player + "' AND day=" + PTLogger.cal.get(Calendar.DAY_OF_MONTH) + " AND month=" + (PTLogger.cal.get(Calendar.MONTH) + 1) + " AND year=" + PTLogger.cal.get(Calendar.YEAR) + " LIMIT 1");
-			if(r.next())
+			ResultSet r = m.query("SELECT time, vanish FROM ptl_log WHERE username='" + player + "' AND day=" + PTLogger.cal.get(Calendar.DAY_OF_MONTH) + " AND month=" + (PTLogger.cal.get(Calendar.MONTH) + 1) + " AND year=" + PTLogger.cal.get(Calendar.YEAR) + " LIMIT 1");
+			if(r.next()) {
 				PTLogger.stats.put(player, r.getLong("time"));
+				PTLogger.vanish.put(player, r.getLong("vanish"));
+			}
 			else {
 				PTLogger.stats.put(player, 0L);
+				PTLogger.vanish.put(player, 0L);
 				PTLogger.newp.add(player);
 			}
 			m.disconnect();
@@ -125,12 +136,13 @@ public final class PTLogger extends GPlugin {
 			m.connect();
 			
 			if(PTLogger.newp.contains(player)) {
-				m.uquery("INSERT INTO ptl_log(username, day, month, year, time) VALUES('" + player + "'," + PTLogger.cal.get(Calendar.DAY_OF_MONTH) + "," + (PTLogger.cal.get(Calendar.MONTH) + 1) + "," + PTLogger.cal.get(Calendar.YEAR) + "," + PTLogger.getPlayerTime(player) + ")");
+				m.uquery("INSERT INTO ptl_log(username, day, month, year, time, vanish) VALUES('" + player + "'," + PTLogger.cal.get(Calendar.DAY_OF_MONTH) + "," + (PTLogger.cal.get(Calendar.MONTH) + 1) + "," + PTLogger.cal.get(Calendar.YEAR) + "," + PTLogger.getPlayerTime(player) + "," + PTLogger.getPlayerVanishTime(player) + ")");
 				PTLogger.newp.remove(player);
 			}
 			else
-				m.uquery("UPDATE ptl_log SET time = " + PTLogger.getPlayerTime(player) + " WHERE username='" + player + "' AND day=" + PTLogger.cal.get(Calendar.DAY_OF_MONTH) + " AND month=" + (PTLogger.cal.get(Calendar.MONTH) + 1) + " AND year=" + PTLogger.cal.get(Calendar.YEAR));
+				m.uquery("UPDATE ptl_log SET time = " + PTLogger.getPlayerTime(player) + ", vanish = " + PTLogger.getPlayerVanishTime(player) + " WHERE username='" + player + "' AND day=" + PTLogger.cal.get(Calendar.DAY_OF_MONTH) + " AND month=" + (PTLogger.cal.get(Calendar.MONTH) + 1) + " AND year=" + PTLogger.cal.get(Calendar.YEAR));
 			PTLogger.stats.remove(player);
+			PTLogger.vanish.remove(player);
 			
 			m.disconnect();
 		}
@@ -169,6 +181,14 @@ public final class PTLogger extends GPlugin {
 			PTLogger.playerLeft(p.getName());
 	}
 	
+	public static void playerVanished(String player) {
+		PTLogger.vanish.put(player, PTLogger.vanish.get(player).longValue() - System.currentTimeMillis() / 1000L);
+	}
+	
+	public static void playerUnvanished(String player) {
+		PTLogger.vanish.put(player, PTLogger.vanish.get(player).longValue() + System.currentTimeMillis() / 1000L);
+	}
+	
 	public static void playerRelog(String player) {
 		PTLogger.playerLeft(player);
 		PTLogger.playerJoined(player);
@@ -195,6 +215,10 @@ public final class PTLogger extends GPlugin {
 	
 	public static long getPlayerTime(String player) {
 		return PTLogger.stats.get(player).longValue();
+	}
+	
+	public static long getPlayerVanishTime(String player) {
+		return PTLogger.vanish.get(player).longValue();
 	}
 	
 	protected boolean enableMysql() {

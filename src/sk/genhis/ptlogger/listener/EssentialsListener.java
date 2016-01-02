@@ -9,7 +9,7 @@ import org.bukkit.event.Listener;
 import sk.genhis.ptlogger.PTLogger;
 
 public final class EssentialsListener implements Listener {
-	@EventHandler(priority=EventPriority.MONITOR)
+	@EventHandler(priority=EventPriority.HIGHEST)
 	public void onAfkStatusChange(AfkStatusChangeEvent e) {
 		String p = e.getController().getName();
 		if(!e.getValue())

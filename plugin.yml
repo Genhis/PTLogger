@@ -1,7 +1,8 @@
 name: PTLogger
+description: Logs playtime.
 author: Genhis
 website: http://genhis.6f.sk/
 depend: [GLib]
-softdepend: [Essentials]
+softdepend: [Essentials, VanishNoPacket]
 main: sk.genhis.ptlogger.PTLogger
-version: 1.0.0
+version: 1.1.0
