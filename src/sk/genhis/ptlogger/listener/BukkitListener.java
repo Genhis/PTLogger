@@ -9,7 +9,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import sk.genhis.ptlogger.PTLogger;
 
 public final class BukkitListener implements Listener {
-	@EventHandler(priority=EventPriority.MONITOR)
+	@EventHandler(priority=EventPriority.LOWEST)
 	public void onPlayerJoin(PlayerJoinEvent e) {
 		if(!PTLogger.isPaused())
 			PTLogger.playerJoined(e.getPlayer().getName());
