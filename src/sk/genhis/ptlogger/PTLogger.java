@@ -39,6 +39,13 @@ public final class PTLogger extends GPlugin {
 	private boolean essentials = false;
 	private boolean vanishNoPacket = false;
 	
+	static {
+		PTLogger.cal.set(Calendar.HOUR_OF_DAY, 0);
+		PTLogger.cal.set(Calendar.MINUTE, 0);
+		PTLogger.cal.set(Calendar.SECOND, 0);
+		PTLogger.cal.set(Calendar.MILLISECOND, 0);
+	}
+	
 	@Override
 	protected boolean enable() {
 		PTLogger.plugin = this;
@@ -113,7 +120,7 @@ public final class PTLogger extends GPlugin {
 		MySQL m = PTLogger.getPlugin().getOwnMysql();
 		try {
 			m.connect();
-			ResultSet r = m.query("SELECT time, vanish FROM ptl_log WHERE username='" + player + "' AND day=" + PTLogger.cal.get(Calendar.DAY_OF_MONTH) + " AND month=" + (PTLogger.cal.get(Calendar.MONTH) + 1) + " AND year=" + PTLogger.cal.get(Calendar.YEAR) + " LIMIT 1");
+			ResultSet r = m.query("SELECT time, vanish FROM ptl_log WHERE username='" + player + "' AND date=" + (PTLogger.cal.getTimeInMillis() / 1000) + " LIMIT 1");
 			if(r.next()) {
 				PTLogger.stats.put(player, r.getLong("time"));
 				PTLogger.vanish.put(player, r.getLong("vanish"));
@@ -131,16 +138,22 @@ public final class PTLogger extends GPlugin {
 	}
 	
 	public static void savePlayer(String player) {
+		if(PTLogger.getPlayerTime(player) < 30 && PTLogger.getPlayerVanishTime(player) == 0) { //ochrana proti botom, hráč musí byť online aspoň 30 sekúnd, aby sa uložil jeho čas
+			PTLogger.stats.remove(player);
+			PTLogger.vanish.remove(player);
+			return;
+		}
+		
 		MySQL m = PTLogger.getPlugin().getOwnMysql();
 		try {
 			m.connect();
 			
 			if(PTLogger.newp.contains(player)) {
-				m.uquery("INSERT INTO ptl_log(username, day, month, year, time, vanish) VALUES('" + player + "'," + PTLogger.cal.get(Calendar.DAY_OF_MONTH) + "," + (PTLogger.cal.get(Calendar.MONTH) + 1) + "," + PTLogger.cal.get(Calendar.YEAR) + "," + PTLogger.getPlayerTime(player) + "," + PTLogger.getPlayerVanishTime(player) + ")");
+				m.uquery("INSERT INTO ptl_log(username, date, time, vanish) VALUES('" + player + "'," + (PTLogger.cal.getTimeInMillis() / 1000) + "," + PTLogger.getPlayerTime(player) + "," + PTLogger.getPlayerVanishTime(player) + ")");
 				PTLogger.newp.remove(player);
 			}
 			else
-				m.uquery("UPDATE ptl_log SET time = " + PTLogger.getPlayerTime(player) + ", vanish = " + PTLogger.getPlayerVanishTime(player) + " WHERE username='" + player + "' AND day=" + PTLogger.cal.get(Calendar.DAY_OF_MONTH) + " AND month=" + (PTLogger.cal.get(Calendar.MONTH) + 1) + " AND year=" + PTLogger.cal.get(Calendar.YEAR));
+				m.uquery("UPDATE ptl_log SET time = " + PTLogger.getPlayerTime(player) + ", vanish = " + PTLogger.getPlayerVanishTime(player) + " WHERE username='" + player + "' AND date=" + (PTLogger.cal.getTimeInMillis() / 1000));
 			PTLogger.stats.remove(player);
 			PTLogger.vanish.remove(player);
 			
@@ -195,16 +208,10 @@ public final class PTLogger extends GPlugin {
 	}
 	
 	public static void updateDate() {
-		Calendar cal = Calendar.getInstance();
-		int newDay = cal.get(Calendar.DAY_OF_MONTH);
-		if(PTLogger.cal.get(Calendar.DAY_OF_MONTH) == newDay) {
-			GLib.getScheduler().scheduleSyncDelayedTask(PTLogger.getPlugin(), PTLogger.udt, 300 * 20L);
-			return;
-		}
-		
+		PTLogger.logger.log("Zacinam novy den");
 		PTLogger.paused = true;
 		PTLogger.allLeave();
-		PTLogger.cal = cal;
+		PTLogger.cal.add(Calendar.DAY_OF_MONTH, 1);
 		PTLogger.paused = false;
 		PTLogger.allJoin();
 	}
