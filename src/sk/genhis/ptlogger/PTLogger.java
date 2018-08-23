@@ -120,7 +120,8 @@ public final class PTLogger extends GPlugin {
 		MySQL m = PTLogger.getPlugin().getOwnMysql();
 		try {
 			m.connect();
-			ResultSet r = m.query("SELECT time, vanish FROM ptl_log WHERE username='" + player + "' AND date=" + (PTLogger.cal.getTimeInMillis() / 1000) + " LIMIT 1");
+			ResultSet r = m.query("SELECT time, vanish FROM ptl_log WHERE username=? AND date=? LIMIT 1;", player, (PTLogger.cal.getTimeInMillis()/1000));
+					//m.query("SELECT time, vanish FROM ptl_log WHERE username='" + player + "' AND date=" + (PTLogger.cal.getTimeInMillis() / 1000) + " LIMIT 1");
 			if(r.next()) {
 				PTLogger.stats.put(player, r.getLong("time"));
 				PTLogger.vanish.put(player, r.getLong("vanish"));
@@ -149,7 +150,9 @@ public final class PTLogger extends GPlugin {
 			m.connect();
 			
 			if(PTLogger.newp.contains(player)) {
-				m.uquery("INSERT INTO ptl_log(username, date, time, vanish) VALUES('" + player + "'," + (PTLogger.cal.getTimeInMillis() / 1000) + "," + PTLogger.getPlayerTime(player) + "," + PTLogger.getPlayerVanishTime(player) + ")");
+				m.uquery("INSERT INTO ptl_log(username, date, time, vanish) VALUES(?,?,?,?) ON DUPLICATE KEY UPDATE time=?, vanish=?;", player, PTLogger.cal.getTimeInMillis()/1000, PTLogger.getPlayerTime(player),PTLogger.getPlayerVanishTime(player), PTLogger.getPlayerTime(player), PTLogger.getPlayerVanishTime(player));
+				
+				//m.uquery("INSERT INTO ptl_log(username, date, time, vanish) VALUES('" + player + "'," + (PTLogger.cal.getTimeInMillis() / 1000) + "," + PTLogger.getPlayerTime(player) + "," + PTLogger.getPlayerVanishTime(player) + ")");
 				PTLogger.newp.remove(player);
 			}
 			else
